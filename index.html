@@ -459,6 +459,69 @@
 
       .scene-hint { bottom: 150px; font-size: 0.55rem; }
     }
+
+    /* ============ 亮色主题（body.light） ============ */
+    body.light { color: #1a2740; background: #e9eff6; }
+
+    body.light #app {
+      background:
+        radial-gradient(circle at 50% 0%, rgba(0,160,200,0.10) 0%, transparent 45%),
+        linear-gradient(180deg, #eaf2fb 0%, #d7e3f2 100%);
+    }
+
+    body.light .header {
+      background: linear-gradient(90deg, transparent 0%, rgba(0,150,200,0.06) 20%, rgba(0,170,210,0.10) 50%, rgba(0,150,200,0.06) 80%, transparent 100%);
+      border-bottom: 1px solid rgba(0,140,180,0.20);
+    }
+    body.light .header-title h1 {
+      background: linear-gradient(180deg, #16304a 0%, #0088aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: none;
+    }
+    body.light .header-title p { color: rgba(0,130,170,0.85); }
+    body.light .header-side { color: rgba(30,50,80,0.75); }
+
+    body.light .panel {
+      background: rgba(255,255,255,0.86);
+      border: 1px solid rgba(0,140,180,0.30);
+      color: #1a2740;
+      box-shadow: 0 0 20px rgba(20,40,70,0.10), inset 0 0 30px rgba(0,150,200,0.04);
+    }
+    body.light .panel::before, body.light .panel::after { border-color: #0088aa; }
+
+    body.light .panel-title { color: #16304a; }
+    body.light .panel-sub,
+    body.light .benefit-label,
+    body.light .env-label,
+    body.light .progress-label { color: rgba(30,50,80,0.60); }
+
+    body.light .benefit-value { color: #0a6b8a !important; }
+    body.light .benefit-trend { color: #0a8a5a; }
+    body.light .env-value { color: #16304a; }
+    body.light .rank-name { color: rgba(30,50,80,0.85); }
+    body.light .rank-value { color: #0a6b8a; }
+    body.light .rank-num { background: rgba(0,140,180,0.12); color: #0a6b8a; }
+    body.light .rank-num.top { background: rgba(0,160,120,0.16); color: #0a8a5a; }
+
+    body.light .env-item { background: rgba(0,140,180,0.06); border-color: rgba(0,140,180,0.15); }
+    body.light .progress-track { background: rgba(20,40,70,0.10); }
+
+    body.light .func-btn {
+      background: rgba(255,255,255,0.86);
+      border: 1px solid rgba(0,140,180,0.30);
+      color: #1a2740;
+    }
+    body.light .func-btn:hover, body.light .func-btn.active {
+      background: rgba(0,170,210,0.16);
+      border-color: #0088aa;
+      box-shadow: 0 0 18px rgba(0,150,200,0.25);
+    }
+
+    body.light .scene-hint { color: rgba(30,50,80,0.60); background: rgba(255,255,255,0.55); }
+    body.light .loader-ring { border-color: rgba(0,140,180,0.15); border-top-color: #0088aa; }
+    body.light #loader { background: #e9eff6; }
+    body.light #loader div:last-child { color: rgba(30,50,80,0.6); }
   </style>
 </head>
 <body>
@@ -553,6 +616,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         <span>复位</span>
       </div>
+      <div class="func-btn" id="themeBtn" onclick="toggleTheme()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <span>主题</span>
+      </div>
     </div>
   </div>
 
@@ -581,6 +648,8 @@
 
     // ===================== Three.js 3D 场景 =====================
     let scene, camera, renderer, controls, buildingGroup;
+    let ground, gridHelper, ambientLight, dirLightObj, blueLightObj, greenLightObj;
+    let currentTheme = 'dark';
     const container = $('scene-container');
 
     function init3D() {
@@ -606,30 +675,30 @@
       controls.maxPolarAngle = Math.PI / 2 - 0.05;
       controls.target.set(0, 16, 0);
 
-      // 灯光
-      const ambient = new THREE.AmbientLight(0xffffff, 0.45);
-      scene.add(ambient);
+      // 灯光（保存引用以便主题切换）
+      ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+      scene.add(ambientLight);
 
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      dirLight.position.set(40, 80, 30);
-      dirLight.castShadow = true;
-      dirLight.shadow.mapSize.width = 2048;
-      dirLight.shadow.mapSize.height = 2048;
-      dirLight.shadow.camera.near = 0.5;
-      dirLight.shadow.camera.far = 200;
-      dirLight.shadow.camera.left = -60;
-      dirLight.shadow.camera.right = 60;
-      dirLight.shadow.camera.top = 60;
-      dirLight.shadow.camera.bottom = -60;
-      scene.add(dirLight);
+      dirLightObj = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLightObj.position.set(40, 80, 30);
+      dirLightObj.castShadow = true;
+      dirLightObj.shadow.mapSize.width = 2048;
+      dirLightObj.shadow.mapSize.height = 2048;
+      dirLightObj.shadow.camera.near = 0.5;
+      dirLightObj.shadow.camera.far = 200;
+      dirLightObj.shadow.camera.left = -60;
+      dirLightObj.shadow.camera.right = 60;
+      dirLightObj.shadow.camera.top = 60;
+      dirLightObj.shadow.camera.bottom = -60;
+      scene.add(dirLightObj);
 
-      const blueLight = new THREE.PointLight(0x00f0ff, 0.6, 100);
-      blueLight.position.set(-20, 20, -20);
-      scene.add(blueLight);
+      blueLightObj = new THREE.PointLight(0x00f0ff, 0.6, 100);
+      blueLightObj.position.set(-20, 20, -20);
+      scene.add(blueLightObj);
 
-      const greenLight = new THREE.PointLight(0x00ff9d, 0.4, 100);
-      greenLight.position.set(30, 15, 30);
-      scene.add(greenLight);
+      greenLightObj = new THREE.PointLight(0x00ff9d, 0.4, 100);
+      greenLightObj.position.set(30, 15, 30);
+      scene.add(greenLightObj);
 
       // 地面
       const groundGeo = new THREE.PlaneGeometry(300, 300);
@@ -638,13 +707,13 @@
         roughness: 0.85,
         metalness: 0.1
       });
-      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground = new THREE.Mesh(groundGeo, groundMat);
       ground.rotation.x = -Math.PI / 2;
       ground.receiveShadow = true;
       scene.add(ground);
 
       // 网格
-      const gridHelper = new THREE.GridHelper(300, 60, 0x00a8ff, 0x0a2a4a);
+      gridHelper = new THREE.GridHelper(300, 60, 0x00a8ff, 0x0a2a4a);
       gridHelper.position.y = 0.05;
       gridHelper.material.opacity = 0.18;
       gridHelper.material.transparent = true;
@@ -655,6 +724,8 @@
 
       createFactoryBuilding();
       createEnvironment();
+
+      applyTheme(currentTheme);
 
       animate();
 
@@ -965,7 +1036,45 @@
       document.querySelector('.func-btn').classList.add('active');
     }
 
+    // ===================== 主题切换（暗色 / 亮色） =====================
+    function applyTheme(theme) {
+      const light = theme === 'light';
+      if (scene && scene.fog) {
+        scene.fog.color.setHex(light ? 0xd7e3f2 : 0x020617);
+        scene.fog.density = light ? 0.0055 : 0.008;
+      }
+      if (ground) ground.material.color.setHex(light ? 0xc6d2de : 0x061024);
+      if (gridHelper) {
+        gridHelper.setColors(light ? 0x88a8c4 : 0x00a8ff, light ? 0xb8c8d8 : 0x0a2a4a);
+        gridHelper.material.opacity = light ? 0.5 : 0.18;
+      }
+      if (ambientLight) ambientLight.intensity = light ? 0.95 : 0.45;
+      if (dirLightObj) dirLightObj.intensity = light ? 0.95 : 0.8;
+      if (blueLightObj) { blueLightObj.intensity = light ? 0.25 : 0.6; blueLightObj.color.setHex(light ? 0x88bbdd : 0x00f0ff); }
+      if (greenLightObj) { greenLightObj.intensity = light ? 0.18 : 0.4; greenLightObj.color.setHex(light ? 0x88ccaa : 0x00ff9d); }
+    }
+
+    function toggleTheme() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.classList.toggle('light', currentTheme === 'light');
+      applyTheme(currentTheme);
+      try { localStorage.setItem('energy-theme', currentTheme); } catch (e) {}
+      const btn = document.getElementById('themeBtn');
+      if (btn) {
+        const span = btn.querySelector('span');
+        if (span) span.textContent = currentTheme === 'light' ? '暗色' : '亮色';
+      }
+    }
+
+    function initTheme() {
+      let saved = 'dark';
+      try { saved = localStorage.getItem('energy-theme') || 'dark'; } catch (e) {}
+      currentTheme = saved;
+      document.body.classList.toggle('light', saved === 'light');
+    }
+
     // 初始化
+    initTheme();
     init3D();
   </script>
 </body>
