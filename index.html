@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>航能E联 · 数智能源管理平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+    :root {
+      --primary: #00f0ff;
+      --secondary: #00a8ff;
+      --accent: #00ff9d;
+      --warning: #ffcc00;
+      --danger: #ff4d6d;
+      --bg-dark: #020617;
+      --panel-bg: rgba(6, 22, 46, 0.78);
+      --panel-border: rgba(0, 240, 255, 0.28);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--bg-dark);
+      color: #fff;
+    }
+
+    #app {
+      position: relative;
+      width: 100%; height: 100%;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(0,240,255,0.12) 0%, transparent 45%),
+        linear-gradient(180deg, #020617 0%, #051024 100%);
+    }
+
+    /* 顶部标题栏 */
+    .header {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      background:
+        linear-gradient(90deg, transparent 0%, rgba(0,168,255,0.08) 20%, rgba(0,240,255,0.12) 50%, rgba(0,168,255,0.08) 80%, transparent 100%);
+      border-bottom: 1px solid rgba(0,240,255,0.15);
+    }
+
+    .header-title {
+      text-align: center;
+      font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
+    }
+
+    .header-title h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      background: linear-gradient(180deg, #fff 0%, #00f0ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 24px rgba(0,240,255,0.45);
+    }
+
+    .header-title p {
+      font-size: 0.75rem;
+      color: rgba(0,240,255,0.85);
+      letter-spacing: 4px;
+      margin-top: -2px;
+    }
+
+    .header-side {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .header-side.left { left: 16px; }
+    .header-side.right { right: 16px; }
+
+    .time-badge {
+      font-family: 'Orbitron', monospace;
+      font-size: 1rem;
+      color: var(--primary);
+    }
+
+    .weather-item {
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    /* 3D 容器 */
+    #scene-container {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+
+    /* 面板基础 */
+    .panel {
+      position: absolute;
+      z-index: 10;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      padding: 14px;
+      box-shadow:
+        0 0 20px rgba(0,0,0,0.35),
+        inset 0 0 30px rgba(0,240,255,0.04);
+    }
+
+    .panel::before, .panel::after {
+      content: '';
+      position: absolute;
+      width: 10px; height: 10px;
+      border: 2px solid var(--primary);
+    }
+
+    .panel::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+    .panel::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+    .panel-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+      padding-left: 10px;
+      border-left: 3px solid var(--primary);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-sub {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.55);
+      font-weight: 400;
+    }
+
+    /* 左侧面板 */
+    .left-column {
+      left: 16px;
+      top: 80px;
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 12;
+    }
+
+    /* 右侧面板 */
+    .right-column {
+      right: 16px;
+      top: 80px;
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 12;
+    }
+
+    /* 中央顶部综合效益 */
+    .center-top {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 560px;
+      max-width: 92vw;
+      z-index: 10;
+      display: flex;
+      justify-content: space-around;
+      padding: 16px 20px;
+    }
+
+    .benefit-item {
+      text-align: center;
+    }
+
+    .benefit-label {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 4px;
+    }
+
+    .benefit-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .benefit-unit {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.55);
+      margin-left: 2px;
+    }
+
+    .benefit-trend {
+      font-size: 0.65rem;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    /* 进度条 */
+    .progress-box {
+      margin-top: 8px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      margin-bottom: 6px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .progress-track {
+      height: 10px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, var(--secondary), var(--primary));
+      box-shadow: 0 0 12px rgba(0,240,255,0.4);
+      position: relative;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 20px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45));
+    }
+
+    /* 排名列表 */
+    .rank-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .rank-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+    }
+
+    .rank-num {
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: rgba(0,240,255,0.12);
+      color: var(--primary);
+    }
+
+    .rank-num.top { background: rgba(0,255,157,0.18); color: var(--accent); }
+
+    .rank-name { flex: 1; color: rgba(255,255,255,0.85); }
+
+    .rank-bar-wrap {
+      width: 90px;
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .rank-bar { height: 100%; border-radius: 3px; }
+
+    .rank-value {
+      width: 60px;
+      text-align: right;
+      font-family: 'Orbitron', monospace;
+      color: var(--primary);
+    }
+
+    /* 环保参数网格 */
+    .env-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .env-item {
+      background: rgba(0,240,255,0.05);
+      border: 1px solid rgba(0,240,255,0.12);
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .env-label {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 4px;
+    }
+
+    .env-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .env-unit {
+      font-size: 0.6rem;
+      color: rgba(255,255,255,0.45);
+    }
+
+    /* 图表容器 */
+    .chart-box {
+      width: 100%;
+      height: 160px;
+    }
+
+    /* 底部功能区 */
+    .bottom-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 12px;
+    }
+
+    .func-btn {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: rgba(6,22,46,0.85);
+      border: 1px solid rgba(0,240,255,0.35);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.25s;
+      backdrop-filter: blur(6px);
+    }
+
+    .func-btn:hover, .func-btn.active {
+      background: rgba(0,240,255,0.15);
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(0,240,255,0.25);
+    }
+
+    .func-btn svg { width: 22px; height: 22px; }
+    .func-btn span { font-size: 0.65rem; }
+
+    /* 加载层 */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      transition: opacity 0.5s;
+    }
+
+    .loader-ring {
+      width: 56px; height: 56px;
+      border: 3px solid rgba(0,240,255,0.15);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 3D 提示 */
+    .scene-hint {
+      position: absolute;
+      bottom: 96px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.45);
+      background: rgba(0,0,0,0.35);
+      padding: 4px 12px;
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 1024px) {
+      .left-column, .right-column {
+        width: 260px;
+      }
+      .center-top { width: 460px; }
+      .benefit-value { font-size: 1.2rem; }
+    }
+
+    @media (max-width: 768px) {
+      .header { height: 52px; }
+      .header-title h1 { font-size: 1rem; letter-spacing: 1px; }
+      .header-title p { font-size: 0.6rem; letter-spacing: 2px; }
+      .header-side { display: none; }
+
+      /* 左右看板：窄屏下始终贴边可见，不再隐藏 */
+      .left-column, .right-column {
+        position: fixed;
+        top: 56px;
+        width: 42vw;
+        max-height: 52vh;
+        overflow-y: auto;
+        padding: 10px;
+        gap: 10px;
+        transform: none;
+      }
+      .left-column { left: 0; right: auto; }
+      .right-column { right: 0; left: auto; }
+      .left-column.open, .right-column.open { transform: translateY(0); }
+
+      .panel { padding: 10px; }
+      .panel-title { font-size: 0.8rem; margin-bottom: 8px; }
+
+      /* 顶部综合指标移到底部，避免遮挡左右看板 */
+      .center-top {
+        top: auto; bottom: 8px;
+        width: 96vw;
+        padding: 8px 10px;
+      }
+
+      .benefit-value { font-size: 0.95rem; }
+      .benefit-label { font-size: 0.6rem; }
+
+      .chart-box { height: 120px; }
+
+      .bottom-bar { bottom: 96px; gap: 8px; }
+
+      .func-btn { width: 46px; height: 46px; }
+      .func-btn svg { width: 16px; height: 16px; }
+      .func-btn span { font-size: 0.55rem; }
+
+      .mobile-handle { display: none; }
+
+      .scene-hint { bottom: 150px; font-size: 0.55rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loader">
+    <div class="loader-ring"></div>
+    <div style="font-size:0.8rem;color:rgba(255,255,255,0.6)">正在加载3D场景...</div>
+  </div>
+
+  <div id="app">
+    <!-- 顶部 -->
+    <header class="header">
+      <div class="header-side left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          <path d="M2 12h20"/>
+        </svg>
+        <span>上海航天智慧能源</span>
+      </div>
+      <div class="header-title">
+        <h1>数智能源管理平台</h1>
+        <p>梁英俊AI测试平台</p>
+      </div>
+      <div class="header-side right">
+        <div class="time-badge" id="clock">15:01:04</div>
+        <div class="weather-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <span>30.8°C</span>
+        </div>
+        <div class="weather-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+          <span>68.8%</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 3D 场景 -->
+    <div id="scene-container"></div>
+    <div class="scene-hint">拖动旋转 · 滚轮缩放 · 双指缩放</div>
+
+    <!-- 中央顶部指标 -->
+    <div class="panel center-top">
+      <div class="benefit-item">
+        <div class="benefit-label">累计用电量</div>
+        <div><span class="benefit-value" style="color:#00f0ff">52.86</span><span class="benefit-unit">万kWh</span></div>
+        <div class="benefit-trend">↑ 2.4%</div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-label">累计节能量</div>
+        <div><span class="benefit-value" style="color:#00a8ff">64.96</span><span class="benefit-unit">tce</span></div>
+        <div class="benefit-trend">↑ 5.1%</div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-label">累计减碳量</div>
+        <div><span class="benefit-value" style="color:#00ff9d">222.01</span><span class="benefit-unit">tCO₂e</span></div>
+        <div class="benefit-trend">↑ 3.8%</div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-label">减碳折合种树</div>
+        <div><span class="benefit-value" style="color:#ffcc00">407.03</span><span class="benefit-unit">棵/年</span></div>
+        <div class="benefit-trend">↑ 4.2%</div>
+      </div>
+    </div>
+
+    <!-- 左侧面板 -->
+    <!-- 左右看板已移除 -->
+
+    <!-- 底部功能按钮 -->
+    <div class="bottom-bar">
+      <div class="func-btn active" onclick="setView('all')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>总览</span>
+      </div>
+      <div class="func-btn" onclick="setView('pv')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <span>光伏</span>
+      </div>
+      <div class="func-btn" onclick="setView('charge')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11h2"/><path d="M10 11h2"/></svg>
+        <span>充电</span>
+      </div>
+      <div class="func-btn" onclick="setView('ac')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M6 8h12"/><path d="M6 16h12"/><path d="M8 8v8"/><path d="M16 8v8"/></svg>
+        <span>空调</span>
+      </div>
+      <div class="func-btn" onclick="resetCamera()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span>复位</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===================== 工具函数 =====================
+    const $ = id => document.getElementById(id);
+
+    function updateClock() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      $('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function togglePanel(id) {
+      const el = $(id);
+      el.classList.toggle('open');
+    }
+
+    // 左右看板（含排名数据、能耗/污染物/负荷图表）已按需求移除
+
+    window.addEventListener('resize', () => {
+      onWindowResize();
+    });
+
+    // ===================== Three.js 3D 场景 =====================
+    let scene, camera, renderer, controls, buildingGroup;
+    const container = $('scene-container');
+
+    function init3D() {
+      scene = new THREE.Scene();
+      scene.background = null;
+      scene.fog = new THREE.FogExp2(0x020617, 0.008);
+
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+      camera.position.set(72, 54, 72);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.minDistance = 30;
+      controls.maxDistance = 160;
+      controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      controls.target.set(0, 16, 0);
+
+      // 灯光
+      const ambient = new THREE.AmbientLight(0xffffff, 0.45);
+      scene.add(ambient);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(40, 80, 30);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 2048;
+      dirLight.shadow.mapSize.height = 2048;
+      dirLight.shadow.camera.near = 0.5;
+      dirLight.shadow.camera.far = 200;
+      dirLight.shadow.camera.left = -60;
+      dirLight.shadow.camera.right = 60;
+      dirLight.shadow.camera.top = 60;
+      dirLight.shadow.camera.bottom = -60;
+      scene.add(dirLight);
+
+      const blueLight = new THREE.PointLight(0x00f0ff, 0.6, 100);
+      blueLight.position.set(-20, 20, -20);
+      scene.add(blueLight);
+
+      const greenLight = new THREE.PointLight(0x00ff9d, 0.4, 100);
+      greenLight.position.set(30, 15, 30);
+      scene.add(greenLight);
+
+      // 地面
+      const groundGeo = new THREE.PlaneGeometry(300, 300);
+      const groundMat = new THREE.MeshStandardMaterial({
+        color: 0x061024,
+        roughness: 0.85,
+        metalness: 0.1
+      });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      // 网格
+      const gridHelper = new THREE.GridHelper(300, 60, 0x00a8ff, 0x0a2a4a);
+      gridHelper.position.y = 0.05;
+      gridHelper.material.opacity = 0.18;
+      gridHelper.material.transparent = true;
+      scene.add(gridHelper);
+
+      buildingGroup = new THREE.Group();
+      scene.add(buildingGroup);
+
+      createFactoryBuilding();
+      createEnvironment();
+
+      animate();
+
+      // 隐藏 loader
+      setTimeout(() => {
+        $('loader').style.opacity = '0';
+        setTimeout(() => $('loader').style.display = 'none', 500);
+      }, 600);
+    }
+
+    function createFactoryBuilding() {
+      // ===== 园区建筑群 =====
+      // 15层主办公楼（1栋）
+      addSkyscraper(0, -4, 18, 18, 15, 0xe8eef5, 0x1a3a5c);
+      // 7~8层办公楼（2栋）
+      addOffice(-34, 18, 24, 16, 7, 0xdfe7ef, 0x16334d);
+      addOffice(34, -20, 24, 16, 8, 0xe3ebf2, 0x16334d);
+      // 配电间（1栋）
+      addDistributionRoom(-34, -30);
+      // 休闲小花园
+      addGarden(34, 28);
+    }
+
+    // 高层建筑（玻璃幕墙）
+    function addSkyscraper(x, z, w, d, floors, bodyColor, glassColor) {
+      const g = new THREE.Group();
+      g.position.set(x, 0, z);
+      const floorH = 3;
+      const h = floors * floorH;
+
+      const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.55, metalness: 0.25 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
+      body.position.y = h / 2;
+      body.castShadow = true; body.receiveShadow = true;
+      g.add(body);
+
+      addWindowGrid(g, w, d, h, floors, floorH, glassColor);
+
+      // 楼顶设备
+      const roofMat = new THREE.MeshStandardMaterial({ color: 0x9aa6b2, roughness: 0.6 });
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(w * 0.5, 1.5, d * 0.5), roofMat);
+      cap.position.y = h + 0.75;
+      cap.castShadow = true;
+      g.add(cap);
+
+      addSolarRoof(g, w, d, h, 0x1a3a5c);
+      buildingGroup.add(g);
+    }
+
+    // 多层办公楼
+    function addOffice(x, z, w, d, floors, bodyColor, glassColor) {
+      const g = new THREE.Group();
+      g.position.set(x, 0, z);
+      const floorH = 3.2;
+      const h = floors * floorH;
+
+      const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.6, metalness: 0.15 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
+      body.position.y = h / 2;
+      body.castShadow = true; body.receiveShadow = true;
+      g.add(body);
+
+      addWindowGrid(g, w, d, h, floors, floorH, glassColor);
+
+      const roofMat = new THREE.MeshStandardMaterial({ color: 0xb0bac6 });
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(w + 0.6, 0.6, d + 0.6), roofMat);
+      roof.position.y = h + 0.3;
+      roof.castShadow = true;
+      g.add(roof);
+
+      addSolarRoof(g, w, d, h + 0.6, 0x16334d);
+      buildingGroup.add(g);
+    }
+
+    // 配电间
+    function addDistributionRoom(x, z) {
+      const g = new THREE.Group();
+      g.position.set(x, 0, z);
+      const w = 12, d = 9, h = 7;
+
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc8ccd2, roughness: 0.7 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
+      body.position.y = h / 2;
+      body.castShadow = true; body.receiveShadow = true;
+      g.add(body);
+
+      for (let i = 0; i < 3; i++) {
+        const pipe = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.7, 0.7, 2.5, 12),
+          new THREE.MeshStandardMaterial({ color: 0x8a9098 })
+        );
+        pipe.position.set(-3 + i * 3, h + 1.25, 0);
+        pipe.castShadow = true;
+        g.add(pipe);
+      }
+      buildingGroup.add(g);
+    }
+
+    // 窗户网格（四面）
+    function addWindowGrid(g, w, d, h, floors, floorH, glassColor) {
+      const glassMat = new THREE.MeshStandardMaterial({
+        color: glassColor, roughness: 0.08, metalness: 0.8,
+        emissive: 0x0a1828, emissiveIntensity: 0.35
+      });
+      const colsX = Math.max(3, Math.floor(w / 3));
+      const colsZ = Math.max(3, Math.floor(d / 3));
+
+      for (let side of [1, -1]) {
+        for (let r = 0; r < floors; r++) {
+          for (let c = 0; c < colsX; c++) {
+            const win = new THREE.Mesh(new THREE.BoxGeometry(w / colsX * 0.7, floorH * 0.55, 0.15), glassMat);
+            win.position.set(-w / 2 + w / colsX * (c + 0.5), floorH * (r + 0.5), side * (d / 2 + 0.05));
+            g.add(win);
+          }
+        }
+      }
+      for (let side of [1, -1]) {
+        for (let r = 0; r < floors; r++) {
+          for (let c = 0; c < colsZ; c++) {
+            const win = new THREE.Mesh(new THREE.BoxGeometry(0.15, floorH * 0.55, d / colsZ * 0.7), glassMat);
+            win.position.set(side * (w / 2 + 0.05), floorH * (r + 0.5), -d / 2 + d / colsZ * (c + 0.5));
+            g.add(win);
+          }
+        }
+      }
+    }
+
+    // 屋顶太阳能板阵列
+    function addSolarRoof(g, w, d, y, color) {
+      const panelMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.25, metalness: 0.6 });
+      const rows = Math.max(2, Math.floor(d / 3));
+      const cols = Math.max(3, Math.floor(w / 3));
+      const pw = Math.min(2.6, w / cols * 0.8);
+      const ph = Math.min(2.2, d / rows * 0.8);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const p = new THREE.Mesh(new THREE.BoxGeometry(pw, 0.12, ph), panelMat);
+          p.position.set(-w / 2 + w / cols * (c + 0.5), y + 0.3, -d / 2 + d / rows * (r + 0.5));
+          p.rotation.x = -0.1;
+          p.castShadow = true;
+          g.add(p);
+        }
+      }
+    }
+
+    // 休闲小花园
+    function addGarden(x, z) {
+      const g = new THREE.Group();
+      g.position.set(x, 0, z);
+      const size = 26;
+
+      const lawn = new THREE.Mesh(
+        new THREE.CircleGeometry(size / 2, 32),
+        new THREE.MeshStandardMaterial({ color: 0x2f7d4f, roughness: 0.95 })
+      );
+      lawn.rotation.x = -Math.PI / 2;
+      lawn.position.y = 0.08;
+      lawn.receiveShadow = true;
+      g.add(lawn);
+
+      const pond = new THREE.Mesh(
+        new THREE.CircleGeometry(4, 24),
+        new THREE.MeshStandardMaterial({ color: 0x1a6fa0, roughness: 0.1, metalness: 0.3, emissive: 0x0a3a5a, emissiveIntensity: 0.2 })
+      );
+      pond.rotation.x = -Math.PI / 2;
+      pond.position.set(4, 0.1, -3);
+      g.add(pond);
+
+      const path = new THREE.Mesh(
+        new THREE.RingGeometry(size / 2 - 3, size / 2 - 1, 32),
+        new THREE.MeshStandardMaterial({ color: 0xb8a37a, roughness: 0.9 })
+      );
+      path.rotation.x = -Math.PI / 2;
+      path.position.y = 0.09;
+      g.add(path);
+
+      for (let i = 0; i < 3; i++) {
+        const angle = (i / 3) * Math.PI * 2;
+        const bench = new THREE.Group();
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(3, 0.2, 1), new THREE.MeshStandardMaterial({ color: 0x9c6b3f }));
+        seat.position.y = 0.8;
+        const legGeo = new THREE.BoxGeometry(0.2, 0.8, 0.8);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+        const leg1 = new THREE.Mesh(legGeo, legMat); leg1.position.set(-1.3, 0.4, 0);
+        const leg2 = new THREE.Mesh(legGeo, legMat); leg2.position.set(1.0, 0.4, 0);
+        bench.add(seat, leg1, leg2);
+        bench.position.set(Math.cos(angle) * 8, 0, Math.sin(angle) * 8);
+        bench.rotation.y = -angle;
+        g.add(bench);
+      }
+
+      const treePos = [[0, 8], [-7, 2], [7, 4], [-4, -7], [5, -6]];
+      treePos.forEach(([tx, tz]) => {
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 2, 8), new THREE.MeshStandardMaterial({ color: 0x6b4a2a }));
+        trunk.position.set(tx, 1, tz);
+        trunk.castShadow = true;
+        const leaves = new THREE.Mesh(new THREE.SphereGeometry(1.4, 10, 8), new THREE.MeshStandardMaterial({ color: 0x2d8a4a }));
+        leaves.position.set(tx, 3, tz);
+        leaves.castShadow = true;
+        g.add(trunk, leaves);
+      });
+
+      buildingGroup.add(g);
+    }
+
+    function createEnvironment() {
+      // 道路
+      const roadGeo = new THREE.PlaneGeometry(120, 14);
+      const roadMat = new THREE.MeshStandardMaterial({ color: 0x2a3548, roughness: 0.9 });
+      const road1 = new THREE.Mesh(roadGeo, roadMat);
+      road1.rotation.x = -Math.PI / 2;
+      road1.position.set(0, 0.06, 35);
+      scene.add(road1);
+
+      const road2 = new THREE.Mesh(new THREE.PlaneGeometry(14, 120), roadMat);
+      road2.rotation.x = -Math.PI / 2;
+      road2.position.set(-55, 0.06, 0);
+      scene.add(road2);
+
+      // 树木
+      const treePositions = [
+        [-40, -25], [-50, -15], [-45, 5], [-48, 25],
+        [40, -28], [50, -18], [48, 8], [45, 28],
+        [-25, 40], [0, 45], [25, 42], [-15, -40]
+      ];
+
+      treePositions.forEach(([x, z]) => {
+        const trunkGeo = new THREE.CylinderGeometry(0.4, 0.6, 2.5, 8);
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.set(x, 1.25, z);
+        trunk.castShadow = true;
+
+        const leavesGeo = new THREE.ConeGeometry(2.5, 5, 8);
+        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x2d7a46 });
+        const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+        leaves.position.set(x, 4, z);
+        leaves.castShadow = true;
+
+        scene.add(trunk, leaves);
+      });
+
+      // 绿化带
+      const bushGeo = new THREE.SphereGeometry(1.2, 8, 6);
+      const bushMat = new THREE.MeshStandardMaterial({ color: 0x3a8c52 });
+      for (let i = 0; i < 20; i++) {
+        const bush = new THREE.Mesh(bushGeo, bushMat);
+        const angle = (i / 20) * Math.PI * 2;
+        bush.position.set(Math.cos(angle) * 30, 0.8, Math.sin(angle) * 18);
+        bush.scale.set(1, 0.6, 1);
+        bush.castShadow = true;
+        scene.add(bush);
+      }
+    }
+
+    function onWindowResize() {
+      if (!camera || !renderer) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      if (buildingGroup) {
+        buildingGroup.rotation.y += 0.0008;
+      }
+      renderer.render(scene, camera);
+    }
+
+    // 视角切换
+    const viewPositions = {
+      all: { pos: [72, 54, 72], target: [0, 16, 0] },
+      pv: { pos: [0, 82, 10], target: [0, 42, 0] },
+      charge: { pos: [-34, 20, -74], target: [-34, 5, -30] },
+      ac: { pos: [34, 34, 8], target: [34, 14, -14] }
+    };
+
+    function setView(name) {
+      document.querySelectorAll('.func-btn').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      const v = viewPositions[name];
+      if (!v) return;
+      const startPos = camera.position.clone();
+      const endPos = new THREE.Vector3(...v.pos);
+      const startTarget = controls.target.clone();
+      const endTarget = new THREE.Vector3(...v.target);
+      let t = 0;
+      function fly() {
+        t += 0.02;
+        if (t > 1) t = 1;
+        const ease = 1 - Math.pow(1 - t, 3);
+        camera.position.lerpVectors(startPos, endPos, ease);
+        controls.target.lerpVectors(startTarget, endTarget, ease);
+        controls.update();
+        if (t < 1) requestAnimationFrame(fly);
+      }
+      fly();
+    }
+
+    function resetCamera() {
+      const v = viewPositions.all;
+      camera.position.set(...v.pos);
+      controls.target.set(...v.target);
+      controls.update();
+      document.querySelectorAll('.func-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector('.func-btn').classList.add('active');
+    }
+
+    // 初始化
+    init3D();
+  </script>
+</body>
+</html>
