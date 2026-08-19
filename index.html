@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
 
@@ -329,6 +330,64 @@
       height: 160px;
     }
 
+    /* 左侧导航小按钮 + 可切换看板 */
+    .left-nav {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 14;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      width: 58px;
+      min-height: 58px;
+      padding: 8px 4px;
+      border-radius: 10px;
+      background: rgba(6,22,46,0.82);
+      border: 1px solid rgba(0,240,255,0.30);
+      color: #cfeffd;
+      font-size: 0.62rem;
+      line-height: 1.3;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: all 0.2s;
+      backdrop-filter: blur(6px);
+      user-select: none;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: rgba(0,240,255,0.15);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 0 16px rgba(0,240,255,0.25);
+    }
+
+    .left-dash {
+      position: absolute;
+      left: 76px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 300px;
+      max-height: 72vh;
+      overflow-y: auto;
+      z-index: 13;
+      display: none;
+    }
+
+    .left-dash.show { display: block; }
+
+    .left-dash .panel { position: relative; width: 100%; }
+
+    .dash-panel { display: none; }
+    .dash-panel.active { display: block; }
+
     /* 底部功能区 */
     .bottom-bar {
       position: absolute;
@@ -457,6 +516,10 @@
 
       .mobile-handle { display: none; }
 
+      .left-nav { left: 4px; gap: 6px; }
+      .nav-btn { width: 46px; min-height: 46px; font-size: 0.55rem; padding: 4px 2px; }
+      .left-dash { left: 58px; width: 70vw; max-height: 64vh; }
+
       .scene-hint { bottom: 150px; font-size: 0.55rem; }
     }
 
@@ -517,6 +580,19 @@
       border-color: #0088aa;
       box-shadow: 0 0 18px rgba(0,150,200,0.25);
     }
+
+    body.light .nav-btn {
+      background: rgba(255,255,255,0.86);
+      border: 1px solid rgba(0,140,180,0.30);
+      color: #1a2740;
+    }
+    body.light .nav-btn:hover, body.light .nav-btn.active {
+      background: rgba(0,170,210,0.16);
+      border-color: #0088aa;
+      color: #16304a;
+      box-shadow: 0 0 16px rgba(0,150,200,0.25);
+    }
+    body.light .left-dash { color: #1a2740; }
 
     body.light .scene-hint { color: rgba(30,50,80,0.60); background: rgba(255,255,255,0.55); }
     body.light .loader-ring { border-color: rgba(0,140,180,0.15); border-top-color: #0088aa; }
@@ -591,6 +667,56 @@
       </div>
     </div>
 
+    <!-- 左侧导航小按钮 + 可切换看板 -->
+    <div class="left-nav">
+      <div class="nav-btn" id="navTarget" onclick="toggleDash('target')">节能减碳目标跟踪</div>
+      <div class="nav-btn" id="navRank" onclick="toggleDash('rank')">综合能耗排名</div>
+      <div class="nav-btn" id="navTrend" onclick="toggleDash('trend')">综合能耗月趋势</div>
+    </div>
+
+    <div class="left-dash" id="leftDash">
+      <!-- 节能减碳目标跟踪 -->
+      <div class="panel dash-panel" id="panel-target">
+        <div class="panel-title">
+          节能减碳目标跟踪
+          <span class="panel-sub">年度</span>
+        </div>
+        <div class="progress-box">
+          <div class="progress-label"><span>年总量控制目标</span><span style="color:#00f0ff">300 tce</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:84.6%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:rgba(255,255,255,0.5);margin-top:4px"><span>已用 84.6%</span><span>偏差 -2.3%</span></div>
+        </div>
+        <div class="progress-box" style="margin-top:14px">
+          <div class="progress-label"><span>节能量目标</span><span style="color:#00ff9d">64.96 tce</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:72%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:rgba(255,255,255,0.5);margin-top:4px"><span>完成 72%</span><span>↑ 5.1%</span></div>
+        </div>
+        <div class="progress-box" style="margin-top:14px">
+          <div class="progress-label"><span>减碳量目标</span><span style="color:#ffcc00">222.01 tCO₂e</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:88%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:rgba(255,255,255,0.5);margin-top:4px"><span>完成 88%</span><span>↑ 3.8%</span></div>
+        </div>
+      </div>
+
+      <!-- 综合能耗排名 -->
+      <div class="panel dash-panel" id="panel-rank">
+        <div class="panel-title">
+          综合能耗排名
+          <span class="panel-sub">本月</span>
+        </div>
+        <div class="rank-list" id="rankList"><!-- JS 填充 --></div>
+      </div>
+
+      <!-- 综合能耗月趋势 -->
+      <div class="panel dash-panel" id="panel-trend">
+        <div class="panel-title">
+          综合能耗月趋势
+          <span class="panel-sub">kWh</span>
+        </div>
+        <div class="chart-box" id="trendChart"></div>
+      </div>
+    </div>
+
     <!-- 左侧面板 -->
     <!-- 左右看板已移除 -->
 
@@ -640,10 +766,88 @@
       el.classList.toggle('open');
     }
 
-    // 左右看板（含排名数据、能耗/污染物/负荷图表）已按需求移除
+    // ===================== 左侧可切换看板 =====================
+    const rankData = [
+      { name: '空压机房（三）', value: 1216.8, color: '#00ff9d' },
+      { name: '空压机房（二）', value: 1094.4, color: '#00f0ff' },
+      { name: '9号楼1层动力间', value: 1083.2, color: '#00a8ff' },
+      { name: '10号楼4层照明', value: 318.0, color: '#ffcc00' },
+      { name: '9号楼1层照明2-10LP', value: 304.0, color: '#00ff9d' }
+    ];
+    const maxVal = Math.max(...rankData.map(d => d.value));
+    $('rankList').innerHTML = rankData.map((d, i) => `
+      <div class="rank-item">
+        <div class="rank-num ${i < 2 ? 'top' : ''}">${i + 1}</div>
+        <div class="rank-name">${d.name}</div>
+        <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(d.value / maxVal * 100).toFixed(1)}%;background:${d.color}"></div></div>
+        <div class="rank-value">${d.value.toFixed(1)}</div>
+      </div>
+    `).join('');
+
+    let trendChart = null;
+    let trendInited = false;
+    function initTrendChart() {
+      if (trendInited) return;
+      trendChart = echarts.init($('trendChart'));
+      trendChart.setOption({
+        grid: { top: 30, right: 12, bottom: 24, left: 36 },
+        tooltip: { trigger: 'axis', backgroundColor: 'rgba(6,22,46,0.95)', borderColor: '#00f0ff', textStyle: { color: '#fff' } },
+        legend: { data: ['市电', '光伏'], textStyle: { color: 'rgba(255,255,255,0.6)', fontSize: 10 }, top: 0, right: 0, itemWidth: 10, itemHeight: 6 },
+        xAxis: {
+          type: 'category',
+          data: Array.from({ length: 31 }, (_, i) => i + 1),
+          axisLine: { lineStyle: { color: 'rgba(255,255,255,0.15)' } },
+          axisLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 10 }
+        },
+        yAxis: {
+          type: 'value',
+          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
+          axisLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 10 }
+        },
+        series: [
+          {
+            name: '市电', type: 'bar',
+            data: Array.from({ length: 31 }, () => Math.floor(12000 + Math.random() * 8000)),
+            itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#00f0ff' }, { offset: 1, color: 'rgba(0,240,255,0.1)' }]) }
+          },
+          {
+            name: '光伏', type: 'bar',
+            data: Array.from({ length: 31 }, () => Math.floor(2000 + Math.random() * 5000)),
+            itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#00ff9d' }, { offset: 1, color: 'rgba(0,255,157,0.1)' }]) }
+          }
+        ]
+      });
+      trendInited = true;
+    }
+
+    let currentDash = null;
+    function toggleDash(key) {
+      const dash = $('leftDash');
+      const panel = $('panel-' + key);
+      const btn = $('nav' + key.charAt(0).toUpperCase() + key.slice(1));
+      const isOpen = dash.classList.contains('show') && panel.classList.contains('active');
+
+      document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      if (isOpen) {
+        dash.classList.remove('show');
+        currentDash = null;
+      } else {
+        panel.classList.add('active');
+        btn.classList.add('active');
+        dash.classList.add('show');
+        currentDash = key;
+        if (key === 'trend') {
+          initTrendChart();
+          setTimeout(() => trendChart && trendChart.resize(), 60);
+        }
+      }
+    }
 
     window.addEventListener('resize', () => {
       onWindowResize();
+      if (trendInited && currentDash === 'trend') trendChart.resize();
     });
 
     // ===================== Three.js 3D 场景 =====================
