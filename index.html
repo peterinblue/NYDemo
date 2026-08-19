@@ -672,6 +672,7 @@
       <div class="nav-btn" id="navTarget" onclick="toggleDash('target')">节能减碳目标跟踪</div>
       <div class="nav-btn" id="navRank" onclick="toggleDash('rank')">综合能耗排名</div>
       <div class="nav-btn" id="navTrend" onclick="toggleDash('trend')">综合能耗月趋势</div>
+      <div class="nav-btn" id="navLoad" onclick="toggleDash('load')">用电负荷跟踪</div>
     </div>
 
     <div class="left-dash" id="leftDash">
@@ -714,6 +715,15 @@
           <span class="panel-sub">kWh</span>
         </div>
         <div class="chart-box" id="trendChart"></div>
+      </div>
+
+      <!-- 用电负荷跟踪 -->
+      <div class="panel dash-panel" id="panel-load">
+        <div class="panel-title">
+          用电负荷跟踪
+          <span class="panel-sub">今日</span>
+        </div>
+        <div class="chart-box" id="loadChart"></div>
       </div>
     </div>
 
@@ -820,6 +830,35 @@
       trendInited = true;
     }
 
+    let loadChart = null;
+    let loadInited = false;
+    function initLoadChart() {
+      if (loadInited) return;
+      loadChart = echarts.init($('loadChart'));
+      loadChart.setOption({
+        grid: { top: 24, right: 12, bottom: 24, left: 36 },
+        tooltip: { trigger: 'axis', backgroundColor: 'rgba(6,22,46,0.95)', borderColor: '#00f0ff', textStyle: { color: '#fff' } },
+        xAxis: {
+          type: 'category',
+          data: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+          axisLine: { lineStyle: { color: 'rgba(255,255,255,0.15)' } },
+          axisLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 10 }
+        },
+        yAxis: {
+          type: 'value',
+          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
+          axisLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 10 }
+        },
+        series: [{
+          name: '负荷', type: 'line', smooth: true, showSymbol: false,
+          data: [320, 280, 560, 820, 760, 640, 420],
+          lineStyle: { color: '#00ff9d', width: 2 },
+          areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(0,255,157,0.35)' }, { offset: 1, color: 'rgba(0,255,157,0.02)' }]) }
+        }]
+      });
+      loadInited = true;
+    }
+
     let currentDash = null;
     function toggleDash(key) {
       const dash = $('leftDash');
@@ -841,6 +880,9 @@
         if (key === 'trend') {
           initTrendChart();
           setTimeout(() => trendChart && trendChart.resize(), 60);
+        } else if (key === 'load') {
+          initLoadChart();
+          setTimeout(() => loadChart && loadChart.resize(), 60);
         }
       }
     }
@@ -863,6 +905,7 @@
     window.addEventListener('resize', () => {
       onWindowResize();
       if (trendInited && currentDash === 'trend') trendChart.resize();
+      if (loadInited && currentDash === 'load') loadChart.resize();
     });
 
     // ===================== Three.js 3D 场景 =====================
