@@ -845,6 +845,21 @@
       }
     }
 
+    function closeDash() {
+      if (!currentDash) return;
+      document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      $('leftDash').classList.remove('show');
+      currentDash = null;
+    }
+
+    // 点击看板以外的任意位置（3D 场景、空白等）自动隐藏看板；点击看板内部或左侧按钮不收起
+    document.addEventListener('click', (e) => {
+      if (!currentDash) return;
+      if (e.target.closest('.left-nav') || e.target.closest('.left-dash')) return;
+      closeDash();
+    });
+
     window.addEventListener('resize', () => {
       onWindowResize();
       if (trendInited && currentDash === 'trend') trendChart.resize();
