@@ -9,17 +9,15 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
-
     :root {
-      --primary: #00f0ff;
-      --secondary: #00a8ff;
+      --primary: #5fd0ff;
+      --secondary: #3a9bff;
       --accent: #00ff9d;
       --warning: #ffcc00;
-      --danger: #ff4d6d;
-      --bg-dark: #020617;
-      --panel-bg: rgba(6, 22, 46, 0.78);
-      --panel-border: rgba(0, 240, 255, 0.28);
+      --danger: #ff5d7d;
+      --bg-dark: #12406e;
+      --panel-bg: rgba(18, 58, 104, 0.72);
+      --panel-border: rgba(95, 208, 255, 0.35);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,7 +25,7 @@
     html, body {
       width: 100%; height: 100%;
       overflow: hidden;
-      font-family: 'Noto Sans SC', sans-serif;
+      font-family: 'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
       background: var(--bg-dark);
       color: #fff;
     }
@@ -36,8 +34,8 @@
       position: relative;
       width: 100%; height: 100%;
       background:
-        radial-gradient(circle at 50% 0%, rgba(0,240,255,0.12) 0%, transparent 45%),
-        linear-gradient(180deg, #020617 0%, #051024 100%);
+        radial-gradient(circle at 50% 0%, rgba(95,208,255,0.20) 0%, transparent 45%),
+        linear-gradient(180deg, #1f5690 0%, #0f335f 100%);
     }
 
     /* 顶部标题栏 */
@@ -50,28 +48,28 @@
       justify-content: center;
       z-index: 20;
       background:
-        linear-gradient(90deg, transparent 0%, rgba(0,168,255,0.08) 20%, rgba(0,240,255,0.12) 50%, rgba(0,168,255,0.08) 80%, transparent 100%);
-      border-bottom: 1px solid rgba(0,240,255,0.15);
+        linear-gradient(90deg, transparent 0%, rgba(47,143,255,0.08) 20%, rgba(76,201,255,0.12) 50%, rgba(47,143,255,0.08) 80%, transparent 100%);
+      border-bottom: 1px solid rgba(76,201,255,0.15);
     }
 
     .header-title {
       text-align: center;
-      font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
+      font-family: 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
     }
 
     .header-title h1 {
       font-size: 1.6rem;
       font-weight: 700;
       letter-spacing: 2px;
-      background: linear-gradient(180deg, #fff 0%, #00f0ff 100%);
+      background: linear-gradient(180deg, #fff 0%, #4cc9ff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 24px rgba(0,240,255,0.45);
+      text-shadow: 0 0 24px rgba(76,201,255,0.45);
     }
 
     .header-title p {
       font-size: 0.75rem;
-      color: rgba(0,240,255,0.85);
+      color: rgba(76,201,255,0.85);
       letter-spacing: 4px;
       margin-top: -2px;
     }
@@ -95,13 +93,13 @@
       width: auto;
       aspect-ratio: 400 / 374;
       object-fit: contain;
-      filter: drop-shadow(0 0 6px rgba(0,240,255,0.4));
+      filter: drop-shadow(0 0 6px rgba(76,201,255,0.4));
     }
 
     .time-badge {
-      font-family: 'Orbitron', monospace;
+      font-family: 'Consolas', 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
       font-size: 1rem;
-      color: var(--primary);
+      color: #4cc9ff;
     }
 
     .weather-item {
@@ -127,7 +125,7 @@
       padding: 14px;
       box-shadow:
         0 0 20px rgba(0,0,0,0.35),
-        inset 0 0 30px rgba(0,240,255,0.04);
+        inset 0 0 30px rgba(76,201,255,0.04);
     }
 
     .panel::before, .panel::after {
@@ -205,7 +203,7 @@
     }
 
     .benefit-value {
-      font-family: 'Orbitron', monospace;
+      font-family: 'Consolas', 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
       font-size: 1.5rem;
       font-weight: 700;
     }
@@ -247,7 +245,7 @@
       height: 100%;
       border-radius: 5px;
       background: linear-gradient(90deg, var(--secondary), var(--primary));
-      box-shadow: 0 0 12px rgba(0,240,255,0.4);
+      box-shadow: 0 0 12px rgba(76,201,255,0.4);
       position: relative;
     }
 
@@ -275,7 +273,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 0.65rem;
       font-weight: 700;
-      background: rgba(0,240,255,0.12);
+      background: rgba(76,201,255,0.12);
       color: var(--primary);
     }
 
@@ -296,7 +294,7 @@
     .rank-value {
       width: 60px;
       text-align: right;
-      font-family: 'Orbitron', monospace;
+      font-family: 'Consolas', 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
       color: var(--primary);
     }
 
@@ -308,8 +306,8 @@
     }
 
     .env-item {
-      background: rgba(0,240,255,0.05);
-      border: 1px solid rgba(0,240,255,0.12);
+      background: rgba(76,201,255,0.05);
+      border: 1px solid rgba(76,201,255,0.12);
       border-radius: 6px;
       padding: 8px;
       text-align: center;
@@ -322,7 +320,7 @@
     }
 
     .env-value {
-      font-family: 'Orbitron', monospace;
+      font-family: 'Consolas', 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
       font-size: 1rem;
       color: #fff;
     }
@@ -356,7 +354,7 @@
       padding: 8px 4px;
       border-radius: 10px;
       background: rgba(6,22,46,0.82);
-      border: 1px solid rgba(0,240,255,0.30);
+      border: 1px solid rgba(76,201,255,0.30);
       color: #cfeffd;
       font-size: 0.62rem;
       line-height: 1.3;
@@ -371,10 +369,10 @@
     }
 
     .nav-btn:hover, .nav-btn.active {
-      background: rgba(0,240,255,0.15);
+      background: rgba(76,201,255,0.15);
       border-color: var(--primary);
       color: #fff;
-      box-shadow: 0 0 16px rgba(0,240,255,0.25);
+      box-shadow: 0 0 16px rgba(76,201,255,0.25);
     }
 
     .left-dash {
@@ -411,7 +409,7 @@
       width: 64px; height: 64px;
       border-radius: 50%;
       background: rgba(6,22,46,0.85);
-      border: 1px solid rgba(0,240,255,0.35);
+      border: 1px solid rgba(76,201,255,0.35);
       color: #fff;
       display: flex;
       flex-direction: column;
@@ -424,9 +422,9 @@
     }
 
     .func-btn:hover, .func-btn.active {
-      background: rgba(0,240,255,0.15);
+      background: rgba(76,201,255,0.15);
       border-color: var(--primary);
-      box-shadow: 0 0 20px rgba(0,240,255,0.25);
+      box-shadow: 0 0 20px rgba(76,201,255,0.25);
     }
 
     .func-btn svg { width: 22px; height: 22px; }
@@ -448,7 +446,7 @@
 
     .loader-ring {
       width: 56px; height: 56px;
-      border: 3px solid rgba(0,240,255,0.15);
+      border: 3px solid rgba(76,201,255,0.15);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -636,18 +634,10 @@
           <span>30.8°C</span>
         </div>
         <div class="weather-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cc9ff" stroke-width="2">
             <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
           </svg>
           <span>68.8%</span>
-        </div>
-        <div class="weather-item" title="空气质量 PM2.5">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2" stroke-linecap="round">
-            <path d="M3 8h11a3 3 0 1 0-3-3"/>
-            <path d="M3 12h17a3 3 0 1 1-3 3"/>
-            <path d="M3 16h9a3 3 0 1 0-3 3"/>
-          </svg>
-          <span>PM2.5 <b style="color:#00ff9d">18</b> μg/m³</span>
         </div>
       </div>
     </header>
@@ -660,12 +650,12 @@
     <div class="panel center-top">
       <div class="benefit-item">
         <div class="benefit-label">累计用电量</div>
-        <div><span class="benefit-value" style="color:#00f0ff">52.86</span><span class="benefit-unit">万kWh</span></div>
+        <div><span class="benefit-value" style="color:#4cc9ff">52.86</span><span class="benefit-unit">万kWh</span></div>
         <div class="benefit-trend">↑ 2.4%</div>
       </div>
       <div class="benefit-item">
         <div class="benefit-label">累计节能量</div>
-        <div><span class="benefit-value" style="color:#00a8ff">64.96</span><span class="benefit-unit">tce</span></div>
+        <div><span class="benefit-value" style="color:#2f8fff">64.96</span><span class="benefit-unit">tce</span></div>
         <div class="benefit-trend">↑ 5.1%</div>
       </div>
       <div class="benefit-item">
@@ -696,7 +686,7 @@
           <span class="panel-sub">年度</span>
         </div>
         <div class="progress-box">
-          <div class="progress-label"><span>年总量控制目标</span><span style="color:#00f0ff">300 tce</span></div>
+          <div class="progress-label"><span>年总量控制目标</span><span style="color:#4cc9ff">300 tce</span></div>
           <div class="progress-track"><div class="progress-fill" style="width:84.6%"></div></div>
           <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:rgba(255,255,255,0.5);margin-top:4px"><span>已用 84.6%</span><span>偏差 -2.3%</span></div>
         </div>
@@ -792,8 +782,8 @@
     // ===================== 左侧可切换看板 =====================
     const rankData = [
       { name: '空压机房（三）', value: 1216.8, color: '#00ff9d' },
-      { name: '空压机房（二）', value: 1094.4, color: '#00f0ff' },
-      { name: '9号楼1层动力间', value: 1083.2, color: '#00a8ff' },
+      { name: '空压机房（二）', value: 1094.4, color: '#4cc9ff' },
+      { name: '9号楼1层动力间', value: 1083.2, color: '#2f8fff' },
       { name: '10号楼4层照明', value: 318.0, color: '#ffcc00' },
       { name: '9号楼1层照明2-10LP', value: 304.0, color: '#00ff9d' }
     ];
@@ -814,7 +804,7 @@
       trendChart = echarts.init($('trendChart'));
       trendChart.setOption({
         grid: { top: 30, right: 12, bottom: 24, left: 36 },
-        tooltip: { trigger: 'axis', backgroundColor: 'rgba(6,22,46,0.95)', borderColor: '#00f0ff', textStyle: { color: '#fff' } },
+        tooltip: { trigger: 'axis', backgroundColor: 'rgba(13,43,84,0.95)', borderColor: '#4cc9ff', textStyle: { color: '#fff' } },
         legend: { data: ['市电', '光伏'], textStyle: { color: 'rgba(255,255,255,0.6)', fontSize: 10 }, top: 0, right: 0, itemWidth: 10, itemHeight: 6 },
         xAxis: {
           type: 'category',
@@ -831,7 +821,7 @@
           {
             name: '市电', type: 'bar',
             data: Array.from({ length: 31 }, () => Math.floor(12000 + Math.random() * 8000)),
-            itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#00f0ff' }, { offset: 1, color: 'rgba(0,240,255,0.1)' }]) }
+            itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#4cc9ff' }, { offset: 1, color: 'rgba(76,201,255,0.1)' }]) }
           },
           {
             name: '光伏', type: 'bar',
@@ -850,7 +840,7 @@
       loadChart = echarts.init($('loadChart'));
       loadChart.setOption({
         grid: { top: 24, right: 12, bottom: 24, left: 36 },
-        tooltip: { trigger: 'axis', backgroundColor: 'rgba(6,22,46,0.95)', borderColor: '#00f0ff', textStyle: { color: '#fff' } },
+        tooltip: { trigger: 'axis', backgroundColor: 'rgba(13,43,84,0.95)', borderColor: '#4cc9ff', textStyle: { color: '#fff' } },
         xAxis: {
           type: 'category',
           data: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
@@ -930,7 +920,7 @@
     function init3D() {
       scene = new THREE.Scene();
       scene.background = null;
-      scene.fog = new THREE.FogExp2(0x020617, 0.008);
+      scene.fog = new THREE.FogExp2(0x12406e, 0.007);
 
       camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
       camera.position.set(72, 54, 72);
@@ -967,7 +957,7 @@
       dirLightObj.shadow.camera.bottom = -60;
       scene.add(dirLightObj);
 
-      blueLightObj = new THREE.PointLight(0x00f0ff, 0.6, 100);
+      blueLightObj = new THREE.PointLight(0x4cc9ff, 0.6, 100);
       blueLightObj.position.set(-20, 20, -20);
       scene.add(blueLightObj);
 
@@ -978,7 +968,7 @@
       // 地面
       const groundGeo = new THREE.PlaneGeometry(300, 300);
       const groundMat = new THREE.MeshStandardMaterial({
-        color: 0x061024,
+        color: 0x19456f,
         roughness: 0.85,
         metalness: 0.1
       });
@@ -988,7 +978,7 @@
       scene.add(ground);
 
       // 网格
-      gridHelper = new THREE.GridHelper(300, 60, 0x00a8ff, 0x0a2a4a);
+      gridHelper = new THREE.GridHelper(300, 60, 0x3a9bff, 0x204f80);
       gridHelper.position.y = 0.05;
       gridHelper.material.opacity = 0.18;
       gridHelper.material.transparent = true;
@@ -1315,18 +1305,18 @@
     function applyTheme(theme) {
       const light = theme === 'light';
       if (scene && scene.fog) {
-        scene.fog.color.setHex(light ? 0xd7e3f2 : 0x020617);
-        scene.fog.density = light ? 0.0055 : 0.008;
+        scene.fog.color.setHex(light ? 0xd7e3f2 : 0x12406e);
+        scene.fog.density = light ? 0.0055 : 0.007;
       }
-      if (ground) ground.material.color.setHex(light ? 0xc6d2de : 0x061024);
+      if (ground) ground.material.color.setHex(light ? 0xc6d2de : 0x19456f);
       if (gridHelper) {
-        gridHelper.setColors(light ? 0x88a8c4 : 0x00a8ff, light ? 0xb8c8d8 : 0x0a2a4a);
-        gridHelper.material.opacity = light ? 0.5 : 0.18;
+        gridHelper.setColors(light ? 0x88a8c4 : 0x3a9bff, light ? 0xb8c8d8 : 0x204f80);
+        gridHelper.material.opacity = light ? 0.5 : 0.22;
       }
-      if (ambientLight) ambientLight.intensity = light ? 0.95 : 0.45;
-      if (dirLightObj) dirLightObj.intensity = light ? 0.95 : 0.8;
-      if (blueLightObj) { blueLightObj.intensity = light ? 0.25 : 0.6; blueLightObj.color.setHex(light ? 0x88bbdd : 0x00f0ff); }
-      if (greenLightObj) { greenLightObj.intensity = light ? 0.18 : 0.4; greenLightObj.color.setHex(light ? 0x88ccaa : 0x00ff9d); }
+      if (ambientLight) ambientLight.intensity = light ? 0.95 : 0.55;
+      if (dirLightObj) dirLightObj.intensity = light ? 0.95 : 0.9;
+      if (blueLightObj) { blueLightObj.intensity = light ? 0.25 : 0.5; blueLightObj.color.setHex(light ? 0x88bbdd : 0x5fd0ff); }
+      if (greenLightObj) { greenLightObj.intensity = light ? 0.18 : 0.32; greenLightObj.color.setHex(light ? 0x88ccaa : 0x00ff9d); }
     }
 
     function toggleTheme() {
