@@ -1213,12 +1213,12 @@
       const road1 = new THREE.Mesh(roadGeo, roadMat);
       road1.rotation.x = -Math.PI / 2;
       road1.position.set(0, 0.06, 35);
-      scene.add(road1);
+      buildingGroup.add(road1);
 
       const road2 = new THREE.Mesh(new THREE.PlaneGeometry(14, 120), roadMat);
       road2.rotation.x = -Math.PI / 2;
       road2.position.set(-55, 0.06, 0);
-      scene.add(road2);
+      buildingGroup.add(road2);
 
       // 树木
       const treePositions = [
@@ -1240,7 +1240,7 @@
         leaves.position.set(x, 4, z);
         leaves.castShadow = true;
 
-        scene.add(trunk, leaves);
+        buildingGroup.add(trunk, leaves);
       });
 
       // 绿化带
@@ -1252,7 +1252,7 @@
         bush.position.set(Math.cos(angle) * 30, 0.8, Math.sin(angle) * 18);
         bush.scale.set(1, 0.6, 1);
         bush.castShadow = true;
-        scene.add(bush);
+        buildingGroup.add(bush);
       }
     }
 
